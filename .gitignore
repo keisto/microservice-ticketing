@@ -1,0 +1,7 @@
+**/node_modules
+**/.idea
+**/.nova
+**/.vscode
+**/.DS_Store
+**/.next
+**/coverage
