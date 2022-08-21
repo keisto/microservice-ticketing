@@ -1,18 +1,28 @@
-import { TicketCreatedListener } from '../ticket-created-listener'
 import { natsWrapper } from '../../../nats-wrapper'
 import { Ticket } from '../../../models/ticket'
-import { TicketCreatedEvent } from '@keisto/ticketbooth-common'
+import {
+  TicketCreatedEvent,
+  TicketUpdatedEvent,
+} from '@keisto/ticketbooth-common'
 import mongoose from 'mongoose'
 import { Message } from 'node-nats-streaming'
+import { TicketUpdatedListener } from '../ticket-updated-listener'
 
 const setup = async () => {
-  const listener = new TicketCreatedListener(natsWrapper.client)
+  const listener = new TicketUpdatedListener(natsWrapper.client)
 
-  const data: TicketCreatedEvent['data'] = {
-    version: 0,
+  const ticket = Ticket.build({
     id: new mongoose.Types.ObjectId().toHexString(),
     title: 'concert',
-    price: 10,
+    price: 20,
+  })
+  await ticket.save()
+
+  const data: TicketUpdatedEvent['data'] = {
+    id: ticket.id,
+    version: ticket.version + 1,
+    title: 'new concert',
+    price: 100,
     userId: new mongoose.Types.ObjectId().toHexString(),
   }
 
@@ -21,23 +31,36 @@ const setup = async () => {
     ack: jest.fn(),
   }
 
-  return { listener, data, msg }
+  return { listener, data, msg, ticket }
 }
 
-it('creates and saves a ticket', async () => {
-  const { listener, data, msg } = await setup()
+it('finds, updates, and saves a ticket', async () => {
+  const { listener, data, msg, ticket } = await setup()
 
   await listener.onMessage(data, msg)
 
-  const ticket = await Ticket.findById(data.id)
+  const updatedTicket = await Ticket.findById(data.id)
 
-  expect(ticket).toBeDefined()
-  expect(ticket!.title).toEqual(data.title)
-  expect(ticket!.price).toEqual(data.price)
+  expect(updatedTicket).toBeDefined()
+  expect(updatedTicket!.title).toEqual(data.title)
+  expect(updatedTicket!.price).toEqual(data.price)
+  expect(updatedTicket!.version).toEqual(data.version)
 })
 
 it('acks the message', async () => {
-  const { listener, data, msg } = await setup()
+  const { listener, data, msg, ticket } = await setup()
   await listener.onMessage(data, msg)
   expect(msg.ack).toHaveBeenCalled()
+})
+
+it('does not call ack if the event has a skipped version', async () => {
+  const { msg, data, listener, ticket } = await setup()
+
+  data.version = 10
+
+  try {
+    await listener.onMessage(data, msg)
+  } catch (err) {}
+
+  expect(msg.ack).not.toHaveBeenCalled()
 })

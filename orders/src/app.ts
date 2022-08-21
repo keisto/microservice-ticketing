@@ -7,10 +7,10 @@ import {
   errorHandler,
   currentUser,
 } from '@keisto/ticketbooth-common'
-import { createTicketRouter } from './routes/new'
-import { showTicketRouter } from './routes/show'
-import { indexTicketRouter } from './routes/index'
-import { updateTicketRouter } from './routes/update'
+import { showOrderRouter } from './routes/show'
+import { indexOrderRouter } from './routes'
+import { deleteOrderRouter } from './routes/delete'
+import { newOrderRouter } from './routes/new'
 
 const app = express()
 app.set('trust proxy', true)
@@ -24,10 +24,10 @@ app.use(currentUser)
 app.use(errorHandler)
 
 // Routes
-app.use(createTicketRouter)
-app.use(updateTicketRouter)
-app.use(showTicketRouter)
-app.use(indexTicketRouter)
+app.use(deleteOrderRouter)
+app.use(indexOrderRouter)
+app.use(newOrderRouter)
+app.use(showOrderRouter)
 
 app.all('*', () => {
   throw new NotFoundError()

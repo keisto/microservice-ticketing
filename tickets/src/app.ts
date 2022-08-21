@@ -2,12 +2,15 @@ import express from 'express'
 import 'express-async-errors'
 import { json } from 'body-parser'
 import cookieSession from 'cookie-session'
-
-import { currentUserRouter } from './routes/current-user'
-import { loginRouter } from './routes/login'
-import { logoutRouter } from './routes/logout'
-import { registerRouter } from './routes/register'
-import { NotFoundError, errorHandler } from '@keisto/ticketbooth-common'
+import {
+  NotFoundError,
+  errorHandler,
+  currentUser,
+} from '@keisto/ticketbooth-common'
+import { createTicketRouter } from './routes/new'
+import { showTicketRouter } from './routes/show'
+import { indexTicketRouter } from './routes/index'
+import { updateTicketRouter } from './routes/update'
 
 const app = express()
 app.set('trust proxy', true)
@@ -16,17 +19,18 @@ app.use(
   cookieSession({ signed: false, secure: process.env.NODE_ENV !== 'test' })
 )
 
+// Middleware
+app.use(currentUser)
+app.use(errorHandler)
+
 // Routes
-app.use(currentUserRouter)
-app.use(loginRouter)
-app.use(logoutRouter)
-app.use(registerRouter)
+app.use(createTicketRouter)
+app.use(updateTicketRouter)
+app.use(showTicketRouter)
+app.use(indexTicketRouter)
 
 app.all('*', () => {
   throw new NotFoundError()
 })
-
-// Middleware
-app.use(errorHandler)
 
 export { app }

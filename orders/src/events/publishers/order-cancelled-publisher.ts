@@ -1,9 +1,9 @@
 import {
+  OrderCancelledEvent,
   Publisher,
   Subjects,
-  TicketUpdatedEvent,
 } from '@keisto/ticketbooth-common'
 
-export class TicketUpdatedPublisher extends Publisher<TicketUpdatedEvent> {
-  readonly subject = Subjects.TicketUpdated
+export class OrderCancelledPublisher extends Publisher<OrderCancelledEvent> {
+  readonly subject = Subjects.OrderCancelled
 }

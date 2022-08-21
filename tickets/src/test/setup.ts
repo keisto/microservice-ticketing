@@ -1,12 +1,14 @@
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
-import request from 'supertest'
-import { app } from '../app'
+import jwt from 'jsonwebtoken'
+
+jest.mock('../nats-wrapper')
 
 let mongo: any
 
 beforeAll(async () => {
-  // process.env.JWT_KEY = 'test'
+  process.env.JWT_KEY = 'test'
+  process.env.NODE_ENV = 'test'
 
   mongo = await MongoMemoryServer.create()
   const mongoUri = mongo.getUri()
@@ -15,6 +17,7 @@ beforeAll(async () => {
 })
 
 beforeEach(async () => {
+  jest.clearAllMocks()
   const collections = await mongoose.connection.db.collections()
 
   for (let collection of collections) {
@@ -30,17 +33,22 @@ afterAll(async () => {
 })
 
 declare global {
-  var login: () => Promise<string[]>
+  var login: () => string[]
 }
 
-global.login = async () => {
-  const email = 'test@test.com'
-  const password = 'password'
+global.login = () => {
+  const payload = {
+    id: new mongoose.Types.ObjectId().toHexString(),
+    email: 'test@test.com',
+  }
 
-  const response = await request(app)
-    .post('/api/users/register')
-    .send({ email, password })
-    .expect(201)
+  const token = jwt.sign(payload, process.env.JWT_KEY!)
 
-  return response.get('Set-Cookie')
+  const session = { jwt: token }
+
+  const sessionJson = JSON.stringify(session)
+
+  const base64 = Buffer.from(sessionJson).toString('base64')
+
+  return [`session=${base64}`]
 }

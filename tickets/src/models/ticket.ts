@@ -1,32 +1,43 @@
 import mongoose from 'mongoose'
-import { Password } from '../services/password'
+import { updateIfCurrentPlugin } from 'mongoose-update-if-current'
 
 // Interface that describes the props that are required to create a USER
-interface UserAttrs {
-  email: string
-  password: string
+interface TicketAttrs {
+  title: string
+  price: number
+  userId: string
 }
 
 // Interface that describes the props that a USER model has
-interface UserModel extends mongoose.Model<UserDoc> {
-  build(attrs: UserAttrs): UserDoc
+interface TicketModel extends mongoose.Model<TicketDoc> {
+  build(attrs: TicketAttrs): TicketDoc
 }
 
 // Interface that describes the props that a USER document has
-interface UserDoc extends mongoose.Document {
-  email: string
-  password: string
+interface TicketDoc extends mongoose.Document {
+  title: string
+  price: number
+  userId: string
+  version: number
+  orderId?: string
 }
 
-const userSchema = new mongoose.Schema(
+const ticketSchema = new mongoose.Schema(
   {
-    email: {
+    title: {
       type: String,
       required: true,
     },
-    password: {
+    price: {
+      type: Number,
+      required: true,
+    },
+    userId: {
       type: String,
       required: true,
+    },
+    orderId: {
+      type: String,
     },
   },
   {
@@ -34,26 +45,31 @@ const userSchema = new mongoose.Schema(
       transform(doc, ret) {
         ret.id = ret._id
         delete ret._id
-        delete ret.password
       },
     },
-    versionKey: false,
+    // versionKey: false,
   }
 )
 
-// no arrow function (this)
-userSchema.pre('save', async function (done) {
-  if (this.isModified('password')) {
-    const hashed = await Password.toHash(this.get('password'))
-    this.set('password', hashed)
-  }
-  done()
-})
+ticketSchema.set('versionKey', 'version')
 
-userSchema.statics.build = (attrs: UserAttrs) => {
-  return new User(attrs)
+ticketSchema.plugin(updateIfCurrentPlugin)
+// ticketSchema.pre('save', function (done) {
+//   this.$where = {
+//     version: this.get('version') - 1,
+//   }
+//
+//   done()
+// })
+
+// ticketSchema.statics.findByEvent = (event: { id: string; version: number }) => {
+//   return Ticket.findOne({ _id: event.id, version: event.version - 1 })
+// }
+
+ticketSchema.statics.build = (attrs: TicketAttrs) => {
+  return new Ticket(attrs)
 }
 
-const User = mongoose.model<UserDoc, UserModel>('User', userSchema)
+const Ticket = mongoose.model<TicketDoc, TicketModel>('Ticket', ticketSchema)
 
-export { User }
+export { Ticket }

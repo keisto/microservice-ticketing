@@ -7,8 +7,7 @@ import { currentUserRouter } from './routes/current-user'
 import { loginRouter } from './routes/login'
 import { logoutRouter } from './routes/logout'
 import { registerRouter } from './routes/register'
-import { NotFoundError } from './errors/not-found-error'
-import { errorHandler } from './middlewares/error-handler'
+import { NotFoundError, errorHandler } from '@keisto/ticketbooth-common'
 
 const app = express()
 app.set('trust proxy', true)
