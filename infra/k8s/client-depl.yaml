@@ -15,6 +15,9 @@ spec:
       containers:
         - name: client
           image: keisto/client
+          env:
+            - name: NEXT_TELEMETRY_DISABLED
+              value: 'true'
 #          env:
 #            - name: JWT_KEY
 #              valueFrom:

@@ -21,7 +21,6 @@ app.use(
 
 // Middleware
 app.use(currentUser)
-app.use(errorHandler)
 
 // Routes
 app.use(createTicketRouter)
@@ -32,5 +31,7 @@ app.use(indexTicketRouter)
 app.all('*', () => {
   throw new NotFoundError()
 })
+
+app.use(errorHandler)
 
 export { app }

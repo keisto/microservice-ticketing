@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken'
 jest.mock('../nats-wrapper')
 
 let mongo: any
+process.env.STRIPE_KEY =
+  'sk_test_51LZ3DSJyhrJKMp6H4Ik2geXUrr4A5lUBgAuPnKAq6MmDAaiZPsgwTU5I9UYJEaCqqCYhMh4m4fWlJegNoecyRaZX00ecvrcmUc'
 
 beforeAll(async () => {
   process.env.JWT_KEY = 'test'
@@ -26,10 +28,11 @@ beforeEach(async () => {
 })
 
 afterAll(async () => {
+  await mongoose.connection.close()
+
   if (mongo) {
     await mongo.stop()
   }
-  await mongoose.connection.close()
 })
 
 declare global {

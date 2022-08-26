@@ -18,7 +18,6 @@ app.use(
 
 // Middleware
 app.use(currentUser)
-app.use(errorHandler)
 
 // Routes
 app.use(createChargeRouter)
@@ -26,5 +25,7 @@ app.use(createChargeRouter)
 app.all('*', () => {
   throw new NotFoundError()
 })
+
+app.use(errorHandler)
 
 export { app }
