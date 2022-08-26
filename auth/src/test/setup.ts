@@ -6,7 +6,7 @@ import { app } from '../app'
 let mongo: any
 
 beforeAll(async () => {
-  // process.env.JWT_KEY = 'test'
+  process.env.JWT_KEY = 'test'
 
   mongo = await MongoMemoryServer.create()
   const mongoUri = mongo.getUri()
